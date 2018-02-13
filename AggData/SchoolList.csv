@@ -1,0 +1,26 @@
+name,abbrev,Id,Classification 1,Classification 2
+Alabama University ,Alabama,100751,R1,
+Allegheny College,Allegheny,210669,LA,
+Case Western Reserve University ,CaseW,201645,Poly,E
+Clemson University ,Clemson,217882,R1,
+College of William and Mary,WMary,231624,LA,E
+Cornell University ,Cornell,190415,E,
+Georgia Institute of Technology,GTech,139755,Poly,E
+James Madison University ,JamesM,232423,Reg,
+Kansas State University ,KState,155399,R1,
+Kenyon College,Kenyon,203535,LA,E
+Lehigh University ,Lehigh,213543,E,Poly
+Michigan University ,Michigan,170976,E,
+Montclair State University ,Montclair,185590,Reg,
+Purdue University ,Purdue,243780,E,Poly
+Rensselaer Polytechnic Institute,RPI,194824,Poly,E
+Siena College,Siena,195474,LA,
+Southern Connecticut State University ,SConn,130493,Reg,
+Towson University ,Towson,164076,Reg,
+University of California - Berkeley,Berkeley,110635,E,
+University of North Carolina - Chapel Hill,UNC,199120,E,
+Vanderbilt University ,Vanderbilt,221999,E,
+Vassar College,Vassar,197133,LA,E
+Virginia Polytechnic Institute and State University ,VTech,233921,Poly,
+Washington State University ,WState,236939,R1,
+Wright State University ,Wright,206604,Reg,
