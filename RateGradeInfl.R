@@ -57,33 +57,36 @@ SchoolaggRatings <- ratings %>% group_by(school) %>% summarise(meanRat = mean(ra
 SchoolSpendComp <- inner_join(SchoolaggRatings, DoeAgg, by = 'school')
 
 SpendOut1 <- ggplot(data=SchoolSpendComp, aes(x = delta, y = meanRat, label = school, size = Rate, fill = Rate)) + geom_point(shape = 23, alpha = 0.7) + labs(x = 'Difference Between Instructional Expenditures \n and Costs per FTE Equivalent', y = 'Mean Quality Rating per Instructor', 
-                                        title = 'Examining the Influence of Net \n Instructional Expenditures on \n Quality Rating') + theme(plot.title=element_text(size=16, face="bold", color="darkgreen")) + scale_color_gradientn(colours = rainbow(3))
+            title = 'Examining the Influence of Net \n Instructional Expenditures on \n Quality Rating') + theme(plot.title=element_text(size=16, face="bold", color="darkgreen")) + scale_color_gradientn(colours = rainbow(3))
 SpendOut1
 
-SpendOut2 <- ggplot(data=SchoolSpendComp, aes(x = delta, y = meanDiff, label = school, size = Rate, color = Rate)) + geom_point(shape = 23, alpha = 0.7)
-SpendOut2
-
-SpendOut2 <- ggplotly(SpendOut2)
+SpendOut2 <- ggplot(data=SchoolSpendComp, aes(x = delta, y = meanDiff, label = school, size = Rate, fill = Rate)) + geom_point(shape = 23, alpha = 0.7) + 
+  labs(x = 'Difference Between Instructional Expenditures \n and Costs per FTE Equivalent', y = 'Mean Difficulty Rating per Instructor',title = 'Examining the Influence of Net \n Instructional Expenditures on \n Difficulty Rating') + 
+  theme(plot.title=element_text(size=16, face="bold", color="darkgreen")) + scale_color_gradientn(colours = rainbow(3))
 SpendOut2
 
 model1 = lm(meanRat~delta, data=SchoolSpendComp)
 model2 = lm(meanDiff~delta, data=SchoolSpendComp)
 model1
 model2
-InfluenceRat <- influencePlot(model1,	id.method="identify", main="Influence Plot for Model of Mean Quality Rating vs \n Net Instructional Expenditures", sub="Circle size is proportial to Cook's Distance")
-InfluenceDiff <- influencePlot(model1,	id.method="identify", main="Influence Plot for Model of Mean Difficulty Rating vs \n Net Instructional Expenditures", sub="Circle size is proportial to Cook's Distance")
+InfluenceRat <- influencePlot(model1,	id.method="identify", main="Influence Plot for Model of \n Mean Quality Rating vs \n Net Instructional Expenditures", sub="Circle size is proportial to Cook's Distance")
+InfluenceDiff <- influencePlot(model1,	id.method="identify", main="Influence Plot for Model of \n Mean Difficulty Rating vs \n Net Instructional Expenditures", sub="Circle size is proportial to Cook's Distance")
 
 GradeInflRecent <- inflation %>% filter(year > 2005) %>% group_by(school) %>% summarise(meanGPA = mean(GPA, na.rm=T))
 SchoolsGradesRat <- inner_join(SchoolSpendComp, GradeInflRecent, by = 'school')
-InflGradesRat <- ggplotly(ggplot(SchoolsGradesRat, aes(x = meanGPA, y = meanRat, label = school)) + geom_point())
+InflGradesRat <- ggplot(SchoolsGradesRat, aes(x = meanGPA, y = meanRat)) + geom_point(shape = 7, alpha = 0.7, size = SchoolsGradesRat$Rate, fill = SchoolsGradesRat$Rate) + 
+  labs(x = 'Mean GPA', y = 'Mean Quality Rating per Instructor', title = 'Quality Rating and GPA') + 
+  theme(plot.title=element_text(size=12, face="bold", color="darkgreen")) + geom_smooth(method = 'lm')
 InflGradesRat
 
-InflGradesDiff <- ggplotly(ggplot(SchoolsGradesRat, aes(x = meanGPA, y = meanDiff, label = school)) + geom_point())
+InflGradesDiff <- ggplot(SchoolsGradesRat, aes(x = meanGPA, y = meanDiff, label = school)) + geom_point(shape = 7, alpha = 0.7, size = SchoolsGradesRat$Rate, fill = SchoolsGradesRat$Rate)+ 
+  labs(x = 'Mean GPA', y = 'Mean Difficulty Rating per Instructor', title = 'Difficulty Rating and GPA') + 
+  theme(plot.title=element_text(size=12, face="bold", color="darkgreen")) + geom_smooth(method = 'lm')
 InflGradesDiff
 
-test <- ratings %>% group_by(dept) %>% summarise(meanRat = mean(rat))
+test <- ratings %>% group_by(dept) %>% summarise(meanRat = mean(rat), meanDiff = mean(diff))
 
-### Run trimws(gsub(".*the\\s*|department*", "", x), which = 'right')
+### all below for future analyses
 
 test$dept <- trimws(gsub(".*the\\s*|department*", "", test$dept), which = 'right')
 
@@ -94,10 +97,11 @@ PSM = 'Actuarial|Aerospace|Astronomy|Chemistry|Engineering|Computer|Earth|Electr
 
 test$classif = grepl('Actuarial|Aerospace|Astronomy|Chemistry|Engineering|Computer|Earth|Electrical|Industrial|Macromolecular|Materials|Mathematics|Nuclear|Physics|Statistics', test$dept)
 
-test$class = grepl(PSM, test$dept)
-PStestPlot <- ggplot(test, aes(x=classif, y = meanRat)) + geom_boxplot()
-PStestPlot
 
-PStest <- test %>% group_by(test$class) %>% summarize(meanRat = mean(meanRat))
+PStestPlotRat <- ggplot(test, aes(x=classif, y = meanRat)) + geom_boxplot(notch = TRUE, color="orange", fill='blue', alpha=0.2 ) + labs(x = 'Physical Science/Math or Other', y = 'Mean Quality Rating per Instructor', title = 'Quality Rating and Disciplines') + 
+  theme(plot.title=element_text(size=12, face="bold", color="darkgreen"))
+PStestPlotRat
 
-
+PStestPlotDiff <- ggplot(test, aes(x=classif, y = meanDiff)) + geom_boxplot(notch = TRUE, color="orange", fill='blue', alpha=0.2 ) + labs(x = 'Physical Science/Math or Other', y = 'Mean Difficulty Rating per Instructor', title = 'Difficulty Rating and Disciplines') + 
+  theme(plot.title=element_text(size=12, face="bold", color="darkgreen"))
+PStestPlotDiff
