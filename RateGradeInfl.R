@@ -4,56 +4,64 @@ library(ggplot2)
 library(plotly)
 library(ggthemes)
 library(car)
-setwd('~/Documents/DataScienceAcademy/Python/ScrapingProject/')
+library(boot)
+library(stats)
+setwd('~/Documents/DataScienceAcademy/Python/ScrapingProject/') # comment this out 
 
-DOEdata <- fread('./data/doe.csv')
-inflation <- fread('./data/inflation.csv')
-schools <- fread('./data/schools.csv')
-ratings <- fread('./data/ratings.csv')
+DOEdata <- fread('./AggData/DOEschoolData.csv') #DOE College Scorecard data
+inflation <- fread('./AggData/inflation.csv') # data on grade inflation
+schools <- fread('./AggData/schools.csv') # information/classification on schools 
+ratings <- fread('./AggData/ratings.csv') # Rate My Prof reviews
 
 
+# Make Histograms for both Quality and Difficulty
 
-NumRate <- ggplot(data=ratings) + geom_histogram(aes(rat), binwidth = 0.5, bins = 9)
-NumRate <- ggplotly(NumRate)
+NumRate <- ggplot(data=ratings) + geom_histogram(aes(rat), col = 'red', fill = 'blue', binwidth = 0.5, bins = 9) + labs(x = 'Quality Ratings', y = 'Frequency of Occurrence', 
+      title = 'Quality: 138,747 Reviews') + theme(plot.title=element_text(size=16, face="bold", color="darkgreen"))
 NumRate
 
-NumDiff <- ggplot(data=ratings) + geom_histogram(aes(diff), binwidth = 1, bins = 5)
-NumDiff <- ggplotly(NumDiff)
+NumDiff <- ggplot(data=ratings) + geom_histogram(aes(diff), col = 'red', fill = 'blue', binwidth = 1, bins = 5) +  labs(x = 'Difficulty Ratings', y = 'Frequency of Occurrence', 
+        title = 'Difficulty: 138,747 Reviews') + theme(plot.title=element_text(size=16, face="bold", color="darkgreen"))
 NumDiff
 
+# Aggregate Ratings by instructor for more detailed analysis
 aggRatings <- ratings %>% group_by(name, hot, school, dept) %>% summarise(meanRat = mean(rat), meanDiff = mean(diff), N = n())
 aggRatingsHot <- ratings %>% group_by(as.factor(hot)) %>% summarise(meanRat = mean(rat), meanDiff = mean(diff), N = n())
 
-RateDiff <- ggplot(data=aggRatings, aes(meanDiff, meanRat, color = aggRatings$N)) + geom_point(shape = 7, alpha = 0.4) + labs(x = 'Mean Difficulty Rating per Instructor', y = 'Mean Quality Rating per Instructor', 
-  title = '138,747 Rate My Professor Reviews Averaged by Instructor', color = '# Reviews') + geom_smooth(method = 'lm') + scale_color_gradientn(colours = rainbow(3)) +
-  theme(plot.title=element_text(size=16, face="bold", color="darkgreen"))
+# Create plot that explores relationship between percieved quality and difficulty
+RateDiff <- ggplot() + geom_point(data=aggRatings, aes(x = meanDiff, y = meanRat, color = aggRatings$N), shape = 7, alpha = 0.4) + labs(x = 'Mean Difficulty Rating per Instructor', y = 'Mean Quality Rating per Instructor', 
+  title = '138,747 Rate My Professor Reviews Averaged by Instructor', color = '# Reviews') + geom_smooth(data=aggRatings, aes(x = meanDiff, y = meanRat), method = 'lm', formula = y ~ poly(x,3)) 
++ theme(plot.title=element_text(size=16, face="bold", color="darkgreen"))
 RateDiff
-RateDiff <- ggplotly(RateDiff)
-RateDiff
+
+EZQ <- lm(rat~(hot - diff), ratings)
+summary(EZQ)
+
+RatDiffTest <- cor.test(ratings$rat, ratings$diff)
+
 
 HotNot <- ggplot(data=aggRatings, aes(meanDiff, meanRat, color = factor(aggRatings$hot))) + geom_point(shape = 7, alpha = 0.7) + labs(x = 'Mean Difficulty Rating per Instructor', y = 'Mean Quality Rating per Instructor', 
-title = '138,747 Rate My Professor Reviews Averaged by Instructor', color = 'Hot?') + theme(plot.title=element_text(size=16, face="bold", color="darkgreen"))
-HotNot
-HotNot <- ggplotly(HotNot)
+title = '138,747 Rate My Professor Reviews Averaged by Instructor', color = 'Hot?') + theme(plot.title=element_text(size=12, face="bold", color="darkgreen")) + scale_colour_manual(name="Hot \n or \n Not?",  values =c("blue", "red"))
 HotNot
 
-HistHotRat <- ggplot(ratings) + geom_histogram(aes(rat, fill = hot), binwidth = 0.5, bins = 9)
+HistHotRat <- ggplot(ratings, aes(x = rat, color = hot)) + geom_histogram(binwidth = 0.5, bins = 9, alpha = 0.5, position = 'identity') + labs(x = 'Quality Rating', y = 'Frequency of Occurrence', 
+                            title = 'Quality: 138,747 Reviews') + theme(plot.title=element_text(size=16, face="bold", color="darkgreen")) +  scale_colour_manual(name="Hot \n or \n Not?",  values =c("blue", "red"))
 HistHotRat
 
-HistHotDiff <- ggplot(ratings) + geom_histogram(aes(diff, fill = hot), binwidth = 1, bins = 5)
+HistHotDiff <- ggplot(ratings,aes(x = diff, color = hot)) + geom_histogram(alpha = 0.5, position = 'identity', binwidth = 1, bins = 5)+ labs(x = 'Difficulty Rating', y = 'Frequency of Occurrence', 
+                            title = 'Difficulty: 138,747 Reviews') + theme(plot.title=element_text(size=16, face="bold", color="darkgreen")) +  scale_colour_manual(name="Hot \n or \n Not?",  values =c("blue", "red"))
 HistHotDiff
 
 DoeAgg <- DOEdata %>% mutate(delta = (exp - rev)) %>%  group_by(school, delta) %>% summarise(Rate = mean(rate, na.rm = T), SAT = mean(SAT, na.rm = T))
 SchoolaggRatings <- ratings %>% group_by(school) %>% summarise(meanRat = mean(rat), meanDiff = mean(diff), N = n())
 SchoolSpendComp <- inner_join(SchoolaggRatings, DoeAgg, by = 'school')
 
-SpendOut1 <- ggplot(data=SchoolSpendComp, aes(x = delta, y = meanRat, label = school)) + geom_point(shape = 7, alpha = 0.4)
-SpendOut1 <- ggplotly(SpendOut1) + labs(x = 'Difference Between Instructional Expenditures and Costs \n per FTE Equivalent', y = 'Mean Quality Rating per Instructor', 
-                                        title = 'Examining the Influence of Net Instructional Expenditures on ', color = 'Hot?') + theme(plot.title=element_text(size=16, face="bold", color="darkgreen"))
+SpendOut1 <- ggplot(data=SchoolSpendComp, aes(x = delta, y = meanRat, label = school, size = Rate, fill = Rate)) + geom_point(shape = 23, alpha = 0.7) + labs(x = 'Difference Between Instructional Expenditures \n and Costs per FTE Equivalent', y = 'Mean Quality Rating per Instructor', 
+                                        title = 'Examining the Influence of Net \n Instructional Expenditures on \n Quality Rating') + theme(plot.title=element_text(size=16, face="bold", color="darkgreen")) + scale_color_gradientn(colours = rainbow(3))
 SpendOut1
 
-SpendOut2 <- ggplot(data=SchoolSpendComp, aes(x = delta, y = meanDiff, label = school)) + geom_point(shape = 7, alpha = 0.4) + xlim(NA, 20000)
-SpendOut2 + geom_smooth(method = 'lm')
+SpendOut2 <- ggplot(data=SchoolSpendComp, aes(x = delta, y = meanDiff, label = school, size = Rate, color = Rate)) + geom_point(shape = 23, alpha = 0.7)
+SpendOut2
 
 SpendOut2 <- ggplotly(SpendOut2)
 SpendOut2
