@@ -23,8 +23,7 @@ writer.writerow(['name', 'department', 'school', 'overall_score', 'difficulty_sc
 topurl = "http://www.ratemyprofessors.com/search.jsp?queryBy=schoolId&schoolName=Harvard+University&schoolID=399&queryoption=TEACHER"
 driver.get(topurl)
 
-### this isn't actually needed because I manually specify how many times to click the button ###
-# need to know how many times to click the button to get list of all profs
+
 num_ratings = driver.find_element_by_xpath('//span[@class = "professor-count"]').text
 # each button click adds 20 new reviews
 if int(num_ratings) <= 20:
@@ -33,10 +32,6 @@ else:
 	button_clicks = int(num_ratings) // 20
 ### ###
 
-# initializing button
-# button = driver.find_element_by_xpath('//div[@class = "content"]')
-
-# collecting list of urls where profs have at least 20 reviews
 prof_urls = []
 # the tag for the review container
 profs = driver.find_elements_by_xpath('//div[@class = "result-list"]//a')
@@ -45,7 +40,7 @@ for prof in profs:
 	if "ShowRatings" in prof.get_attribute("href"):
 		num_reviews = prof.find_element_by_xpath('.//span[@class = "info"]').text.split(" ")[0]
 		# if the number is >= 20, add it to the list
-		if int(num_reviews) >= 30:
+		if int(num_reviews) >= 1:
 			prof_urls.append(prof.get_attribute("href"))
 
 # now that we have the list of urls, we can scrape the ratings
